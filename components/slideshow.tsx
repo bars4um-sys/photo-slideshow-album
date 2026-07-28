@@ -124,7 +124,7 @@ export default function Slideshow({ slides }: SlideshowProps) {
       </div>
 
       {/* Content */}
-      <div className="relative h-full flex items-center justify-center overflow-hidden">
+      <div className="relative h-full flex items-center justify-center overflow-hidden pt-20 pb-48">
         <AnimatePresence initial={false} custom={direction} mode="wait">
           <motion.div
             key={currentIndex}
@@ -138,14 +138,14 @@ export default function Slideshow({ slides }: SlideshowProps) {
               opacity: { duration: 1 },
               rotateY: { type: 'spring', stiffness: 250, damping: 35, duration: 0.8 },
             }}
-            className="absolute w-full h-full flex items-center justify-center px-6"
+            className="absolute w-full h-full flex items-center justify-center px-6 pt-20"
             style={{
               perspective: '1200px',
               transformStyle: 'preserve-3d',
             }}
           >
             {current.type === 'intro' && (
-              <div className="text-center max-w-2xl">
+              <div className="text-center max-w-2xl -mt-80">
                 <motion.h1
                   className="text-6xl font-bold text-white mb-6"
                   initial={{ opacity: 0, y: 20 }}
@@ -166,7 +166,7 @@ export default function Slideshow({ slides }: SlideshowProps) {
             )}
 
             {current.type === 'photo' && current.image && (
-              <div className="relative w-full h-full flex items-center justify-center">
+              <div className="relative w-full h-full flex items-center justify-center p-4 md:p-8">
                 <motion.div
                   className="relative max-w-3xl w-full"
                   initial={{ opacity: 0, scale: 0.8 }}
@@ -217,7 +217,7 @@ export default function Slideshow({ slides }: SlideshowProps) {
             )}
 
             {current.type === 'outro' && (
-              <div className="text-center max-w-2xl">
+              <div className="text-center max-w-2xl -mt-80">
                 <motion.h1
                   className="text-6xl font-bold text-white mb-6"
                   initial={{ opacity: 0, y: 20 }}
