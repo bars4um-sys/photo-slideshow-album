@@ -161,3 +161,39 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* CSS-анимации для фоновых элементов слайд-шоу (легче для GPU, чем motion) */
+@keyframes blob-1 {
+  0%, 100% { transform: translate(0, 0); }
+  33% { transform: translate(300px, -300px); }
+  66% { transform: translate(-150px, 150px); }
+}
+
+@keyframes blob-2 {
+  0%, 100% { transform: translate(0, 0); }
+  33% { transform: translate(-300px, 300px); }
+  66% { transform: translate(150px, -150px); }
+}
+
+@keyframes blob-3 {
+  0%, 100% { transform: translate(0, 0); }
+  33% { transform: translate(200px, -200px); }
+  66% { transform: translate(-300px, 300px); }
+}
+
+@keyframes blob-4 {
+  0%, 100% { transform: translate(0, 0); }
+  33% { transform: translate(150px, -150px); }
+  66% { transform: translate(-250px, 250px); }
+}
+
+.blob-1 { animation: blob-1 12s ease-in-out infinite; will-change: transform; }
+.blob-2 { animation: blob-2 14s ease-in-out infinite; will-change: transform; }
+.blob-3 { animation: blob-3 16s ease-in-out infinite; will-change: transform; }
+.blob-4 { animation: blob-4 18s ease-in-out infinite; will-change: transform; }
+
+@media (prefers-reduced-motion: reduce) {
+  .blob-1, .blob-2, .blob-3, .blob-4 {
+    animation: none;
+  }
+}

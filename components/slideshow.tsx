@@ -1,15 +1,18 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
+import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 
+export interface Slide {
+  type: 'intro' | 'photo' | 'outro'
+  title?: string
+  description?: string
+  image?: string
+}
+
 interface SlideshowProps {
-  slides: Array<{
-    type: 'intro' | 'photo' | 'outro'
-    title?: string
-    description?: string
-    image?: string
-  }>
+  slides: Slide[]
 }
 
 export default function Slideshow({ slides }: SlideshowProps) {
@@ -17,14 +20,18 @@ export default function Slideshow({ slides }: SlideshowProps) {
   const [direction, setDirection] = useState(0)
   const [isPlaying, setIsPlaying] = useState(true)
   const [aspectRatios, setAspectRatios] = useState<Record<number, number>>({})
+  const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({})
 
-  const paginate = (newDirection: number) => {
-    setDirection(newDirection)
-    setCurrentIndex((prev) => {
-      const next = prev + newDirection
-      return next < 0 ? slides.length - 1 : next >= slides.length ? 0 : next
-    })
-  }
+  const paginate = useCallback(
+    (newDirection: number) => {
+      setDirection(newDirection)
+      setCurrentIndex((prev) => {
+        const next = prev + newDirection
+        return next < 0 ? slides.length - 1 : next >= slides.length ? 0 : next
+      })
+    },
+    [slides.length],
+  )
 
   useEffect(() => {
     if (!isPlaying) return
@@ -32,7 +39,7 @@ export default function Slideshow({ slides }: SlideshowProps) {
       paginate(1)
     }, 7000)
     return () => clearInterval(interval)
-  }, [isPlaying])
+  }, [isPlaying, paginate])
 
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
@@ -41,201 +48,300 @@ export default function Slideshow({ slides }: SlideshowProps) {
     }
     window.addEventListener('keydown', handleKeyPress)
     return () => window.removeEventListener('keydown', handleKeyPress)
-  }, [])
+  }, [paginate])
+
+  // Предзагрузка следующего слайда для плавного переключения
+  useEffect(() => {
+    const nextIndex = (currentIndex + 1) % slides.length
+    const nextSlide = slides[nextIndex]
+    if (nextSlide?.type === 'photo' && nextSlide.image) {
+      const img = new window.Image()
+      img.src = nextSlide.image
+    }
+  }, [currentIndex, slides])
+
+  // Защита от пустого массива слайдов
+  if (!slides || slides.length === 0) {
+    return null
+  }
 
   const current = slides[currentIndex]
 
+  // Дополнительная защита от некорректного индекса
+  if (!current) {
+    return null
+  }
+
+  // Вычисляем порядковый номер фотографии для alt-текста
+  const photoNumber = slides
+    .slice(0, currentIndex + 1)
+    .filter((s) => s.type === 'photo').length
+
+  // Эффект перелистывания страницы книги:
+  // - Левый край закреплён у «корешка» (transformOrigin: left center)
+  // - Уходящая страница переворачивается на 180°, показывая оборот
+  // - Новая страница лежит под ней и открывается по мере переворота
   const variants = {
-    enter: (dir: number) => ({
-      x: dir > 0 ? 1000 : -1000,
-      opacity: 0,
-      rotateY: dir > 0 ? 45 : -45,
-    }),
+    enter: {
+      rotateY: 0,
+    },
     center: {
       zIndex: 1,
-      x: 0,
-      opacity: 1,
       rotateY: 0,
     },
     exit: (dir: number) => ({
-      zIndex: 0,
-      x: dir < 0 ? 1000 : -1000,
-      opacity: 0,
-      rotateY: dir < 0 ? 45 : -45,
+      zIndex: 2,
+      rotateY: dir > 0 ? -180 : 180,
     }),
   }
 
+  // Лицевая сторона: исчезает в первой половине (0%→50%)
+  const frontVariants = {
+    enter: { opacity: 0 },
+    center: { opacity: 1, transition: { duration: 1 } },
+    exit: { opacity: [1, 1, 0], transition: { duration: 1.5, times: [0, 0.5, 1] } },
+  }
+
+  // Оборотная сторона (папиросная бумага): появляется после 90°, исчезает позже
+  const backVariants = {
+    enter: { opacity: 0 },
+    center: { opacity: 0 },
+    exit: { opacity: [0, 0, 1, 1, 0] },
+  }
+
+  // Адаптивное соотношение сторон контейнера
+  const ratio = aspectRatios[currentIndex]
+  const isPortrait = ratio !== undefined && ratio < 1.3
+  const containerStyle: React.CSSProperties = isPortrait
+    ? { aspectRatio: ratio, height: '75vh', width: 'auto', maxWidth: '100%' }
+    : { aspectRatio: ratio ?? 16 / 9, width: '100%', maxWidth: '1280px', maxHeight: '75vh' }
+
   return (
     <div className="relative w-full h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 overflow-hidden">
-      {/* Animated background elements */}
+      {/* Animated background elements (CSS-анимации легче для GPU) */}
       <div className="absolute inset-0 pointer-events-none">
-        <motion.div
-          className="absolute w-[800px] h-[800px] bg-purple-600 rounded-full mix-blend-screen filter blur-[120px] opacity-50"
-          animate={{
-            x: [0, 300, -150, 0],
-            y: [0, -300, 150, 0],
-          }}
-          transition={{
-            duration: 12,
-            repeat: Infinity,
-            ease: 'easeInOut',
-          }}
+        <div
+          className="absolute w-[800px] h-[800px] bg-purple-600 rounded-full mix-blend-screen filter blur-[120px] opacity-50 blob-1"
           style={{ top: '-10%', left: '-20%' }}
         />
-        <motion.div
-          className="absolute w-[700px] h-[700px] bg-blue-500 rounded-full mix-blend-screen filter blur-[120px] opacity-45"
-          animate={{
-            x: [0, -300, 150, 0],
-            y: [0, 300, -150, 0],
-          }}
-          transition={{
-            duration: 14,
-            repeat: Infinity,
-            ease: 'easeInOut',
-          }}
+        <div
+          className="absolute w-[700px] h-[700px] bg-blue-500 rounded-full mix-blend-screen filter blur-[120px] opacity-45 blob-2"
           style={{ bottom: '-15%', right: '-15%' }}
         />
-        <motion.div
-          className="absolute w-[600px] h-[600px] bg-cyan-500 rounded-full mix-blend-screen filter blur-[110px] opacity-40"
-          animate={{
-            x: [0, 200, -300, 0],
-            y: [0, -200, 300, 0],
-          }}
-          transition={{
-            duration: 16,
-            repeat: Infinity,
-            ease: 'easeInOut',
-          }}
+        <div
+          className="absolute w-[600px] h-[600px] bg-cyan-500 rounded-full mix-blend-screen filter blur-[110px] opacity-40 blob-3"
           style={{ top: '30%', right: '-10%' }}
         />
-        <motion.div
-          className="absolute w-[650px] h-[650px] bg-pink-500 rounded-full mix-blend-screen filter blur-[110px] opacity-35"
-          animate={{
-            x: [0, 150, -250, 0],
-            y: [0, -150, 250, 0],
-          }}
-          transition={{
-            duration: 18,
-            repeat: Infinity,
-            ease: 'easeInOut',
-          }}
+        <div
+          className="absolute w-[650px] h-[650px] bg-pink-500 rounded-full mix-blend-screen filter blur-[110px] opacity-35 blob-4"
           style={{ bottom: '10%', left: '-15%' }}
         />
       </div>
 
       {/* Content */}
       <div className="relative h-full flex items-center justify-center overflow-hidden pt-20 pb-48">
-        <AnimatePresence initial={false} custom={direction} mode="wait">
+        <AnimatePresence initial={false} custom={direction} mode="sync">
+          {/* Внешний motion.div — управляет zIndex (уходящий поверх нового) + perspective для 3D */}
           <motion.div
             key={currentIndex}
             custom={direction}
-            variants={variants}
+            variants={{
+              enter: { zIndex: 0 },
+              center: { zIndex: 1 },
+              exit: { zIndex: 2 },
+            }}
             initial="enter"
             animate="center"
             exit="exit"
-            transition={{
-              x: { type: 'spring', stiffness: 250, damping: 35, duration: 0.8 },
-              opacity: { duration: 1 },
-              rotateY: { type: 'spring', stiffness: 250, damping: 35, duration: 0.8 },
-            }}
             className="absolute w-full h-full flex items-center justify-center px-6 pt-20"
-            style={{
-              perspective: '1200px',
-              transformStyle: 'preserve-3d',
-            }}
+            style={{ perspective: '1500px' }}
           >
-            {current.type === 'intro' && (
-              <div className="text-center max-w-2xl -mt-80">
-                <motion.h1
-                  className="text-6xl font-bold text-white mb-6"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2, duration: 0.6 }}
-                >
-                  {current.title}
-                </motion.h1>
-                <motion.p
-                  className="text-xl text-gray-300"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4, duration: 0.6 }}
-                >
-                  {current.description}
-                </motion.p>
-              </div>
-            )}
-
-            {current.type === 'photo' && current.image && (
-              <div className="relative w-full h-full flex items-center justify-center p-4 md:p-8">
-                <motion.div
-                  className="relative max-w-3xl w-full"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.6 }}
-                >
-                  {/* Card shadow and frame */}
-                  <div className="relative rounded-lg overflow-hidden shadow-2xl" style={{ aspectRatio: '16 / 9' }}>
-                    <motion.img
-                      key={currentIndex}
-                      src={current.image}
-                      alt="Slide"
-                      onLoad={(e) => {
-                        const img = e.currentTarget
-                        const ratio = img.naturalWidth / img.naturalHeight
-                        setAspectRatios((prev) => ({
-                          ...prev,
-                          [currentIndex]: ratio,
-                        }))
-                      }}
-                      className="w-full h-full"
-                      style={{
-                        // Адаптивный object-fit в зависимости от соотношения сторон
-                        objectFit:
-                          aspectRatios[currentIndex] !== undefined
-                            ? aspectRatios[currentIndex] > 1.3
-                              ? 'cover' // Альбомные фото (широкие) - заполнить, может быть обрезка
-                              : 'contain' // Портретные/квадратные - вмещаются целиком
-                            : 'cover', // По умолчанию cover пока загружается
-                        objectPosition: 'center',
-                      }}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.8 }}
-                    />
-                    {/* Shine effect */}
-                    <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0"
-                      animate={{ opacity: [0, 0.1, 0] }}
-                      transition={{
-                        duration: 3,
-                        repeat: Infinity,
-                      }}
-                    />
+            {/* Внутренний контейнер — переворачивается вокруг левого края (корешка) */}
+            <motion.div
+              custom={direction}
+              variants={variants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{
+                rotateY: { type: 'tween', ease: [0.4, 0, 0.2, 1], duration: 1.5 },
+              }}
+              className="relative"
+              style={{
+                transformStyle: 'preserve-3d',
+                transformOrigin: 'left center',
+                width: '100%',
+                maxWidth: '1280px',
+                height: '75vh',
+              }}
+            >
+              {/* Лицевая сторона — исчезает раньше (50%→100%) */}
+              <motion.div
+                custom={direction}
+                variants={frontVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                className="absolute inset-0 flex items-center justify-center"
+                style={{ backfaceVisibility: 'hidden' }}
+              >
+                {current.type === 'intro' && (
+                  <div className="text-center max-w-2xl">
+                    <motion.h1
+                      className="text-6xl font-bold text-white mb-6"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.5, duration: 0.6 }}
+                    >
+                      {current.title}
+                    </motion.h1>
+                    <motion.p
+                      className="text-xl text-gray-300"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.7, duration: 0.6 }}
+                    >
+                      {current.description}
+                    </motion.p>
                   </div>
-                </motion.div>
-              </div>
-            )}
+                )}
 
-            {current.type === 'outro' && (
-              <div className="text-center max-w-2xl -mt-80">
-                <motion.h1
-                  className="text-6xl font-bold text-white mb-6"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2, duration: 0.6 }}
-                >
-                  {current.title}
-                </motion.h1>
-                <motion.p
-                  className="text-lg text-gray-300"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4, duration: 0.6 }}
-                >
-                  {current.description}
-                </motion.p>
-              </div>
-            )}
+                {current.type === 'photo' && current.image && (
+                  <div className="relative w-full h-full flex items-center justify-center p-4 md:p-8">
+                    <div className="relative" style={containerStyle}>
+                      {/* Card shadow and frame */}
+                      <div className="relative overflow-hidden h-full w-full">
+                        {imageErrors[currentIndex] ? (
+                          <div className="flex items-center justify-center h-full w-full bg-white/5 text-white/40 text-lg">
+                            Не удалось загрузить изображение
+                          </div>
+                        ) : (
+                          <Image
+                            src={current.image}
+                            alt={`Фотография ${photoNumber}`}
+                            fill
+                            onLoad={(e) => {
+                              const img = e.currentTarget as HTMLImageElement
+                              if (img.naturalWidth && img.naturalHeight) {
+                                const r = img.naturalWidth / img.naturalHeight
+                                setAspectRatios((prev) => ({
+                                  ...prev,
+                                  [currentIndex]: r,
+                                }))
+                              }
+                            }}
+                            onError={() => {
+                              setImageErrors((prev) => ({
+                                ...prev,
+                                [currentIndex]: true,
+                              }))
+                            }}
+                            sizes="(max-width: 1280px) 100vw, 1280px"
+                            className="object-center"
+                            style={{
+                              objectFit: "contain",
+                              objectPosition: 'center',
+                            }}
+                          />
+                        )}
+                        {/* Shine effect */}
+                        <motion.div
+                          className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0"
+                          animate={{ opacity: [0, 0.1, 0] }}
+                          transition={{
+                            duration: 3,
+                            repeat: Infinity,
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {current.type === 'outro' && (
+                  <div className="text-center max-w-2xl">
+                    <motion.h1
+                      className="text-6xl font-bold text-white mb-6"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.5, duration: 0.6 }}
+                    >
+                      {current.title}
+                    </motion.h1>
+                    <motion.p
+                      className="text-lg text-gray-300"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.7, duration: 0.6 }}
+                    >
+                      {current.description}
+                    </motion.p>
+                  </div>
+                )}
+              </motion.div>
+
+              {/* Оборотная сторона — появляется после 90°, исчезает позже (85%→100%) */}
+              <motion.div
+                custom={direction}
+                variants={backVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{
+                  opacity: { type: 'tween', duration: 1.5, times: [0, 0.45, 0.55, 0.85, 1] },
+                }}
+                className="absolute inset-0 flex items-center justify-center"
+                style={{ transform: 'rotateY(180deg)' }}
+              >
+                {/* Контейнер по размеру слайда */}
+                <div className="relative overflow-hidden" style={current.type === 'photo' ? containerStyle : { width: '100%', maxWidth: '42rem' }}>
+                  {/* Зеркальное отражение контента слайда */}
+                  <div className="absolute inset-0" style={{ transform: 'scaleX(-1)' }}>
+                    {current.type === 'photo' && current.image && (
+                      <div className="relative w-full h-full">
+                        {imageErrors[currentIndex] ? (
+                          <div className="flex items-center justify-center h-full w-full bg-white/5 text-white/40 text-lg">
+                            Не удалось загрузить изображение
+                          </div>
+                        ) : (
+                          <Image
+                            src={current.image}
+                            alt={`Фотография ${photoNumber} (оборот)`}
+                            fill
+                            sizes="(max-width: 1280px) 100vw, 1280px"
+                            className="object-center"
+                            style={{
+                              objectFit: "cover",
+                              objectPosition: 'center',
+                            }}
+                          />
+                        )}
+                      </div>
+                    )}
+                    {current.type === 'intro' && (
+                      <div className="flex items-center justify-center h-full p-8">
+                        <div className="text-center max-w-2xl">
+                          <h1 className="text-6xl font-bold text-white mb-6">{current.title}</h1>
+                          <p className="text-xl text-gray-300">{current.description}</p>
+                        </div>
+                      </div>
+                    )}
+                    {current.type === 'outro' && (
+                      <div className="flex items-center justify-center h-full p-8">
+                        <div className="text-center max-w-2xl">
+                          <h1 className="text-6xl font-bold text-white mb-6">{current.title}</h1>
+                          <p className="text-lg text-gray-300">{current.description}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  {/* Полупрозрачный слой «папиросной бумаги» поверх зеркального отражения */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-white/20 to-white/10 backdrop-blur-sm" />
+                  {/* Тень от корешка (левый край) */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-black/30 to-transparent" />
+                </div>
+              </motion.div>
+            </motion.div>
           </motion.div>
         </AnimatePresence>
       </div>
@@ -245,6 +351,7 @@ export default function Slideshow({ slides }: SlideshowProps) {
         <div className="flex gap-2">
           <button
             onClick={() => paginate(-1)}
+            aria-label="Предыдущий слайд"
             className="px-6 py-3 rounded-full bg-white/10 hover:bg-white/20 text-white font-semibold transition-all duration-300 backdrop-blur-md border border-white/20 hover:border-white/40"
           >
             ← Предыдущая
@@ -260,6 +367,7 @@ export default function Slideshow({ slides }: SlideshowProps) {
                 setIsPlaying(false)
               }
             }}
+            aria-label={isPlaying ? 'Пауза' : 'Воспроизведение'}
             className="px-4 py-3 rounded-full bg-white/10 hover:bg-white/20 text-white font-semibold transition-all duration-300 backdrop-blur-md border border-white/20 hover:border-white/40"
             title={isPlaying ? 'Пауза' : 'Воспроизведение'}
           >
@@ -276,6 +384,8 @@ export default function Slideshow({ slides }: SlideshowProps) {
                 setDirection(index > currentIndex ? 1 : -1)
                 setCurrentIndex(index)
               }}
+              aria-label={`Перейти к слайду ${index + 1}`}
+              aria-current={index === currentIndex}
               className="w-3 h-3 rounded-full transition-all duration-300"
               animate={{
                 backgroundColor:
@@ -284,13 +394,13 @@ export default function Slideshow({ slides }: SlideshowProps) {
                     : 'rgba(255, 255, 255, 0.3)',
                 scale: index === currentIndex ? 1.3 : 1,
               }}
-              whileHover={{ scale: 1.2 }}
             />
           ))}
         </div>
 
         <button
           onClick={() => paginate(1)}
+          aria-label="Следующий слайд"
           className="px-6 py-3 rounded-full bg-white/10 hover:bg-white/20 text-white font-semibold transition-all duration-300 backdrop-blur-md border border-white/20 hover:border-white/40"
         >
           Следующая →

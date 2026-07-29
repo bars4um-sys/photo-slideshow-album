@@ -22,18 +22,18 @@
 **Файл:** `components/slideshow.tsx`  
 **Строка ~141:**
 ```typescript
-className="absolute w-full h-full flex items-start justify-center px-6 pt-20"
+className="absolute w-full h-full flex items-center justify-center px-6 pt-20"
 ```
 
 - `pt-20` = отступ текста сверху. Возможные значения: `pt-8`, `pt-12`, `pt-16`, `pt-20`, `pt-24`, `pt-32`
-- `items-start` = выравнивание (вверх). Если нужно в центр - меняй на `items-center`
+- `items-center` = выравнивание по центру. Если нужно прижать вверх - меняй на `items-start`
 
-**Строка ~148:**
+**Строки ~148 и ~220:**
 ```typescript
-<div className="text-center max-w-2xl -mt-80">
+<div className="text-center max-w-2xl">
 ```
 
-- `-mt-80` = смещение текста вверх. Возможные значения: `-mt-20`, `-mt-40`, `-mt-60`, `-mt-80`, или просто `mt-0` если не нужно смещение
+Текст позиционируется через flex-выравнивание родительского контейнера. Для смещения используй отступы родителя (`pt-*`).
 
 ---
 
@@ -47,12 +47,16 @@ className="absolute w-full h-full flex items-start justify-center px-6 pt-20"
 
 - `p-4 md:p-8` = паддинг (отступы по сторонам). Можешь менять на `p-2`, `p-6`, `p-10` и т.д.
 
-**Строка ~173:**
+**Строка ~115 (containerStyle):**
 ```typescript
-style={{ aspectRatio: '16 / 9', ... }}
+const containerStyle: React.CSSProperties = isPortrait
+  ? { aspectRatio: ratio, height: '75vh', width: 'auto', maxWidth: '100%' }
+  : { aspectRatio: ratio ?? 16 / 9, width: '100%', maxWidth: '768px', maxHeight: '75vh' }
 ```
 
-- `16 / 9` = соотношение сторон контейнера. Можешь менять на `4 / 3`, `1 / 1`, `16 / 10` и т.д.
+- `16 / 9` = соотношение сторон контейнера по умолчанию (для альбомных фото). Можешь менять на `4 / 3`, `1 / 1`, `16 / 10` и т.д.
+- `75vh` = максимальная высота контейнера. Можешь менять на `60vh`, `80vh`, `90vh` и т.д.
+- `768px` = максимальная ширина контейнера. Можешь менять на `640px`, `1024px` и т.д.
 
 ---
 
@@ -76,17 +80,26 @@ setInterval(() => {
 ## 5. Фон (цвета и движение)
 
 **Файл:** `components/slideshow.tsx`  
-**Строки ~72-105** - четыре блока `<motion.div>` с цветами фона:
+**Строки ~72-105** - четыре блока `<div>` с цветами фона:
 
 ```typescript
-className="absolute w-[800px] h-[800px] bg-purple-600 rounded-full mix-blend-screen filter blur-[120px] opacity-50"
+className="absolute w-[800px] h-[800px] bg-purple-600 rounded-full mix-blend-screen filter blur-[120px] opacity-50 blob-1"
 ```
 
 - `bg-purple-600` = цвет (можешь менять на `bg-blue-500`, `bg-pink-600`, `bg-cyan-400` и т.д.)
 - `opacity-50` = прозрачность (0-100). Чем меньше - тем прозрачнее
 - `blur-[120px]` = размытие. Чем больше число - тем сильнее размытие
 - `w-[800px] h-[800px]` = размер элемента
-- `duration: 12` = скорость анимации (в секундах)
+- `blob-1` = CSS-класс анимации (определён в `app/globals.css`)
+
+**Файл:** `app/globals.css`  
+**Строки ~165-195** - CSS-анимации фона:
+
+```css
+.blob-1 { animation: blob-1 12s ease-in-out infinite; will-change: transform; }
+```
+
+- `12s` = скорость анимации (в секундах). Меняй на `8s`, `16s`, `20s` и т.д.
 
 ---
 
