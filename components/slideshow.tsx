@@ -33,13 +33,35 @@ export default function Slideshow({ slides }: SlideshowProps) {
     [slides.length],
   )
 
+  // Расчёт времени показа слайда в зависимости от типа и количества текста
+  const getSlideDuration = useCallback((index: number): number => {
+    const slide = slides[index]
+    if (!slide) return 7000
+
+    // Для фото — стандартные 7 секунд
+    if (slide.type === 'photo') return 7000
+
+    // Для intro/outro — рассчитываем по количеству слов
+    // Средняя скорость чтения: ~150 слов/мин → 400ms на слово
+    const wordCount = [
+      slide.title || '',
+      slide.description || '',
+    ]
+      .join(' ')
+      .split(/\s+/)
+      .filter(Boolean).length
+
+    return Math.max(5000, wordCount * 400) // минимум 5 секунд
+  }, [slides])
+
   useEffect(() => {
     if (!isPlaying) return
+    const duration = getSlideDuration(currentIndex)
     const interval = setInterval(() => {
       paginate(1)
-    }, 7000)
+    }, duration)
     return () => clearInterval(interval)
-  }, [isPlaying, paginate])
+  }, [isPlaying, paginate, currentIndex, getSlideDuration])
 
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
