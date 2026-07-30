@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'export',
-  basePath: '/photo-slideshow-album',
+  trailingSlash: true,
   images: {
     unoptimized: true,
   },

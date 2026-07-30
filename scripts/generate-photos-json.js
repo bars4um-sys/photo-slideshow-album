@@ -12,7 +12,7 @@ try {
       return VALID_EXTENSIONS.includes(ext)
     })
     .sort()
-    .map((file) => `/photos/${file}`)
+    .map((file) => `photos/${file}`)
 
   const output = JSON.stringify({ photos }, null, 2)
   const outputPath = path.join(__dirname, '..', 'public', 'photos.json')
