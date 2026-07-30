@@ -42,9 +42,10 @@ async function getPhotoSlides(): Promise<Slide[]> {
   try {
     const jsonPath = path.join(process.cwd(), 'public', 'photos.json')
     const data = JSON.parse(readFileSync(jsonPath, 'utf-8'))
+    const basePath = process.env.NEXT_PUBLIC_BASE_PATH || ''
     return (data.photos as string[]).map((photo) => ({
       type: 'photo' as const,
-      image: photo,
+      image: `${basePath}${photo}`,
     }))
   } catch {
     return []

@@ -32,6 +32,8 @@ jobs:
         run: node scripts/generate-photos-json.js
       - name: Build
         run: pnpm build
+        env:
+          NEXT_PUBLIC_BASE_PATH: /photo-slideshow-album
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
