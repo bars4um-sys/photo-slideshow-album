@@ -1,8 +1,10 @@
 import Slideshow, { type Slide } from '@/components/slideshow'
+import { readFileSync } from 'fs'
+import path from 'path'
 
 export const metadata = {
-  title: 'Элегантное слайд-шоу',
-  description: 'Красивое слайд-шоу с эффектом перелистывания страниц',
+  title: 'Марракеш — фотоальбом',
+  description: 'Фотоальбом путешествия в Марракеш',
 }
 
 // ============================================================================
@@ -34,30 +36,18 @@ const outroSlide: Slide = {
   description: 'Надеемся, вам понравилось путешествие. Используйте стрелки на клавиатуре или кнопки для навигации. Каждый момент уникален!',
 }
 
-// Фотографии загружаются автоматически из public/photos/
-// через API-маршрут /api/photos при загрузке страницы
+// Фотографии загружаются из сгенерированного photos.json
+// (генерируется скриптом scripts/generate-photos-json.js перед сборкой)
 async function getPhotoSlides(): Promise<Slide[]> {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/photos`, {
-      cache: 'no-store',
-    })
-    const data = await res.json()
+    const jsonPath = path.join(process.cwd(), 'public', 'photos.json')
+    const data = JSON.parse(readFileSync(jsonPath, 'utf-8'))
     return (data.photos as string[]).map((photo) => ({
       type: 'photo' as const,
       image: photo,
     }))
   } catch {
-    // Fallback на статичный список, если API недоступен
-    return [
-      { type: 'photo', image: '/photos/p01.webp' },
-      { type: 'photo', image: '/photos/p02.webp' },
-      { type: 'photo', image: '/photos/p03.webp' },
-      { type: 'photo', image: '/photos/p04.webp' },
-      { type: 'photo', image: '/photos/p05.webp' },
-      { type: 'photo', image: '/photos/p06.webp' },
-      { type: 'photo', image: '/photos/p07.webp' },
-      { type: 'photo', image: '/photos/p08.webp' },
-    ]
+    return []
   }
 }
 
