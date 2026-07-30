@@ -1,10 +1,17 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
+import { Playfair_Display } from 'next/font/google'
 import './globals.css'
 
+const playfair = Playfair_Display({
+  subsets: ['cyrillic', 'latin'],
+  display: 'swap',
+  variable: '--font-playfair',
+})
+
 export const metadata: Metadata = {
-  title: 'Элегантное слайд-шоу',
-  description: 'Красивое слайд-шоу с эффектом перелистывания страниц',
+  title: 'Марракеш — фотоальбом',
+  description: 'Фотоальбом путешествия в Марракеш',
   icons: {
     icon: [
       {
@@ -38,7 +45,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="ru">
+    <html lang="ru" className={`${playfair.variable}`}>
       <body className="antialiased">
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}

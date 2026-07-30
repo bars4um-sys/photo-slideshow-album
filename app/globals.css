@@ -197,3 +197,91 @@
     animation: none;
   }
 }
+
+/* ========== Марокканский стиль для intro/outro ========== */
+
+.font-playfair {
+  font-family: var(--font-playfair), Georgia, serif;
+}
+
+/* Декоративная линия в марокканском стиле */
+.moroccan-border {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+
+.moroccan-border::before,
+.moroccan-border::after {
+  content: '';
+  display: block;
+  height: 2px;
+  width: 80px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #c9a84c,
+    transparent
+  );
+}
+
+.moroccan-border::after {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #c9a84c,
+    transparent
+  );
+}
+
+/* Декоративный ромб/звезда */
+.moroccan-diamond {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  background: #c9a84c;
+  transform: rotate(45deg);
+  margin: 0 0.5rem;
+  opacity: 0.7;
+}
+
+/* Анимация появления текста */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 1s ease-out forwards;
+}
+
+.animate-fade-in-up-delay-1 {
+  animation: fadeInUp 1s ease-out 0.3s forwards;
+  opacity: 0;
+}
+
+.animate-fade-in-up-delay-2 {
+  animation: fadeInUp 1s ease-out 0.6s forwards;
+  opacity: 0;
+}
+
+/* Тень для текста (как светящийся) */
+.text-shadow-gold {
+  text-shadow: 0 0 40px rgba(201, 168, 76, 0.3), 0 0 80px rgba(201, 168, 76, 0.1);
+}
+
+/* Марокканский геометрический паттерн (фон) */
+.moroccan-pattern {
+  background-image:
+    radial-gradient(circle at 25% 25%, rgba(201, 168, 76, 0.05) 1px, transparent 1px),
+    radial-gradient(circle at 75% 75%, rgba(201, 168, 76, 0.05) 1px, transparent 1px);
+  background-size: 60px 60px;
+}

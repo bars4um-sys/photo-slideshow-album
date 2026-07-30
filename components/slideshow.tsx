@@ -207,23 +207,39 @@ export default function Slideshow({ slides }: SlideshowProps) {
                 style={{ backfaceVisibility: 'hidden' }}
               >
                 {current.type === 'intro' && (
-                  <div className="text-center max-w-2xl">
+                  <div className="text-center max-w-3xl px-8 moroccan-pattern">
+                    {/* Декоративная верхняя линия */}
+                    <div className="moroccan-border mb-8">
+                      <span className="moroccan-diamond" />
+                    </div>
+
                     <motion.h1
-                      className="text-6xl font-bold text-white mb-6"
-                      initial={{ opacity: 0, y: 20 }}
+                      className="font-playfair text-7xl md:text-8xl lg:text-9xl text-white mb-6 leading-tight text-shadow-gold"
+                      initial={{ opacity: 0, y: 30 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.5, duration: 0.6 }}
+                      transition={{ delay: 0.3, duration: 0.8, ease: 'easeOut' }}
                     >
                       {current.title}
                     </motion.h1>
+
+                    {/* Декоративный разделитель */}
+                    <div className="moroccan-border my-8">
+                      <span className="moroccan-diamond" />
+                    </div>
+
                     <motion.p
-                      className="text-xl text-gray-300"
+                      className="font-playfair text-xl md:text-2xl text-amber-200/90 leading-relaxed max-w-2xl mx-auto whitespace-pre-line"
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.7, duration: 0.6 }}
+                      transition={{ delay: 0.6, duration: 0.8, ease: 'easeOut' }}
                     >
                       {current.description}
                     </motion.p>
+
+                    {/* Декоративная нижняя линия */}
+                    <div className="moroccan-border mt-8">
+                      <span className="moroccan-diamond" />
+                    </div>
                   </div>
                 )}
 
@@ -278,23 +294,39 @@ export default function Slideshow({ slides }: SlideshowProps) {
                 )}
 
                 {current.type === 'outro' && (
-                  <div className="text-center max-w-2xl">
+                  <div className="text-center max-w-3xl px-8 moroccan-pattern">
+                    {/* Декоративная верхняя линия */}
+                    <div className="moroccan-border mb-8">
+                      <span className="moroccan-diamond" />
+                    </div>
+
                     <motion.h1
-                      className="text-6xl font-bold text-white mb-6"
-                      initial={{ opacity: 0, y: 20 }}
+                      className="font-playfair text-6xl md:text-7xl text-white mb-6 leading-tight text-shadow-gold"
+                      initial={{ opacity: 0, y: 30 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.5, duration: 0.6 }}
+                      transition={{ delay: 0.3, duration: 0.8, ease: 'easeOut' }}
                     >
                       {current.title}
                     </motion.h1>
+
+                    {/* Декоративный разделитель */}
+                    <div className="moroccan-border my-8">
+                      <span className="moroccan-diamond" />
+                    </div>
+
                     <motion.p
-                      className="text-lg text-gray-300"
+                      className="font-playfair text-xl md:text-2xl text-amber-200/90 leading-relaxed max-w-2xl mx-auto"
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.7, duration: 0.6 }}
+                      transition={{ delay: 0.6, duration: 0.8, ease: 'easeOut' }}
                     >
                       {current.description}
                     </motion.p>
+
+                    {/* Декоративная нижняя линия */}
+                    <div className="moroccan-border mt-8">
+                      <span className="moroccan-diamond" />
+                    </div>
                   </div>
                 )}
               </motion.div>
