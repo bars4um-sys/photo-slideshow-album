@@ -4,6 +4,8 @@ const nextConfig = {
   basePath: '/photo-slideshow-album',
   images: {
     unoptimized: true,
+    loader: 'custom',
+    loaderFile: './lib/image-loader.ts',
   },
 }
 
