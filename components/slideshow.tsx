@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react'
+import Image from 'next/image'
 import { motion, AnimatePresence } from 'framer-motion'
 
 export interface Slide {
@@ -237,11 +238,12 @@ export default function Slideshow({ slides }: SlideshowProps) {
                             Не удалось загрузить изображение
                           </div>
                         ) : (
-                          <img
+                          <Image
                             src={current.image}
                             alt={`Фотография ${photoNumber}`}
+                            fill
                             onLoad={(e) => {
-                              const img = e.currentTarget
+                              const img = e.currentTarget as HTMLImageElement
                               if (img.naturalWidth && img.naturalHeight) {
                                 const r = img.naturalWidth / img.naturalHeight
                                 setAspectRatios((prev) => ({
@@ -256,7 +258,8 @@ export default function Slideshow({ slides }: SlideshowProps) {
                                 [currentIndex]: true,
                               }))
                             }}
-                            className="object-center w-full h-full"
+                            sizes="(max-width: 1280px) 100vw, 1280px"
+                            className="object-center"
                             style={{
                               objectFit: "contain",
                               objectPosition: 'center',
@@ -323,10 +326,12 @@ export default function Slideshow({ slides }: SlideshowProps) {
                             Не удалось загрузить изображение
                           </div>
                         ) : (
-                          <img
+                          <Image
                             src={current.image}
                             alt={`Фотография ${photoNumber} (оборот)`}
-                            className="object-center w-full h-full"
+                            fill
+                            sizes="(max-width: 1280px) 100vw, 1280px"
+                            className="object-center"
                             style={{
                               objectFit: "cover",
                               objectPosition: 'center',
